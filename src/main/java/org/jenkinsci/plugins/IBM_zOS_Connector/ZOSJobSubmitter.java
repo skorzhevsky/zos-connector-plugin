@@ -49,7 +49,16 @@ public class ZOSJobSubmitter extends Builder implements SimpleBuildStep {
     /**
      * Credentials id to be converted to login+pw.
      */
-    private final String credentialsId;
+    private String credentialsId;
+    /**
+     * Env variable with credential id
+     */
+    private final String envVariableWithCred;
+
+    /**
+     * Credential Type
+     */
+    private final String credentialType;
     /**
      * Whether need to wait for the job completion.
      */
@@ -103,6 +112,8 @@ public class ZOSJobSubmitter extends Builder implements SimpleBuildStep {
             String server,
             int port,
             String credentialsId,
+            String envVariableWithCred,
+            String credentialType,
             boolean wait,
             int waitTime,
             boolean deleteJobFromSpool,
@@ -114,7 +125,9 @@ public class ZOSJobSubmitter extends Builder implements SimpleBuildStep {
         // Copy values
         this.server = server.replaceAll("\\s", "");
         this.port = port;
+        this.envVariableWithCred = envVariableWithCred;
         this.credentialsId = credentialsId;
+        this.credentialType = credentialType;
         this.wait = wait;
         this.waitTime = waitTime;
         this.JESINTERFACELEVEL1 = JESINTERFACELEVEL1;
@@ -159,6 +172,9 @@ public class ZOSJobSubmitter extends Builder implements SimpleBuildStep {
             _server = environment.expand(_server);
             _jobFile = environment.expand(_jobFile);
             _MaxCC = environment.expand(_MaxCC);
+            if (credentialType.equalsIgnoreCase("envvar")) {
+                this.credentialsId = environment.expand(envVariableWithCred);
+            }
             // Read the JCL + expand.
             try {
                 inputJCL = workspace.child(_jobFile).readToString();
@@ -277,11 +293,21 @@ public class ZOSJobSubmitter extends Builder implements SimpleBuildStep {
     }
 
     /**
+     * @return env variable with credential id.
+     */
+    public String getEnvVariableWithCred() { return envVariableWithCred; }
+
+    /**
      * @return credentials id provided.
      */
     public String getCredentialsId() {
         return credentialsId;
     }
+
+    /**
+     * @return credential type.
+     */
+    public String getCredentialType() { return credentialType; }
 
     /**
      * @return job file provided.
